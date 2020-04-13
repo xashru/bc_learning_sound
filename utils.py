@@ -136,8 +136,8 @@ def mix(sound1, sound2, r, fs):
     ratio2 = r * (1-ratio1) / (1-r)
 
     mixed_sound = np.copy(sound1)
-    mixed_sound[:stride] = ratio1 * sound1[:stride] + ratio1 * sound2[:stride]
-    mixed_sound[stride:] = ratio2 * sound1[stride:] + ratio2 * sound2[stride:]
+    mixed_sound[:stride] = ratio1 * sound1[:stride] + (1-ratio1) * sound2[:stride]
+    mixed_sound[stride:] = ratio2 * sound1[stride:] + (1-ratio2) * sound2[stride:]
 
     return mixed_sound
 
