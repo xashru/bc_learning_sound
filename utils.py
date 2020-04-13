@@ -90,7 +90,7 @@ def compute_gain(sound, fs, min_db=-80.0, mode='A_weighting'):
     stride = n_fft // 2
 
     gain = []
-    for i in xrange(0, len(sound) - n_fft + 1, stride):
+    for i in range(0, len(sound) - n_fft + 1, stride):
         if mode == 'RMSE':
             g = np.mean(sound[i: i + n_fft] ** 2)
         elif mode == 'A_weighting':
@@ -109,13 +109,37 @@ def compute_gain(sound, fs, min_db=-80.0, mode='A_weighting'):
     return gain_db
 
 
-def mix(sound1, sound2, r, fs):
+def mix_bc(sound1, sound2, r, fs):
     gain1 = np.max(compute_gain(sound1, fs))  # Decibel
     gain2 = np.max(compute_gain(sound2, fs))
     t = 1.0 / (1 + np.power(10, (gain1 - gain2) / 20.) * (1 - r) / r)
     sound = ((sound1 * t + sound2 * (1 - t)) / np.sqrt(t ** 2 + (1 - t) ** 2))
 
     return sound
+
+
+def mix_temporal(sound1, sound2, r, fs):
+    stride = int(round(sound2.size*(1-r)))
+    mixed_sound = sound1
+    aug_type = np.random.randint(2)
+    if stride != 0:
+        if aug_type == 0:
+            mixed_sound[0:stride] = sound2[0:stride]
+        else:
+            mixed_sound[-stride:] = sound2[-stride:]
+    return mixed_sound
+
+
+def mix(sound1, sound2, r, fs):
+    stride = int(round(sound2.size*r))
+    ratio1 = np.random.rand()
+    ratio2 = r * (1-ratio1) / (1-r)
+
+    mixed_sound = np.copy(sound1)
+    mixed_sound[:stride] = ratio1 * sound1[:stride] + ratio1 * sound2[:stride]
+    mixed_sound[stride:] = ratio2 * sound1[stride:] + ratio2 * sound2[stride:]
+
+    return mixed_sound
 
 
 def kl_divergence(y, t):
